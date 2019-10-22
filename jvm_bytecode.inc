@@ -410,8 +410,19 @@ macro instanceof? type?*
     u2 (type)
 end macro
 
-;** TODO INVOKE **;
-;** TODO INVOKE **;
+macro invokeinterface? index?*, n?*
+    u1 ($B9)
+    u2 (index)
+    u1 (n)
+    u1 ($00) ; cache hashing storage
+end macro
+
+iterate <kind,opcd>, virtual,$B6, special,$B7, static,$B8
+    macro invoke#kind? index?*
+        u1 (opcd)
+        u2 (index)
+    end macro
+end iterate
 
 macro ior?
     u1 ($80)
@@ -446,9 +457,17 @@ macro ixor?
 end macro
 
 macro jsr? label?
+    local offset
+    offset = ((label) - $)
+    u1 ($A8)
+    s2 (offset)
 end macro
 
 macro jsr_w? label?
+    local offset
+    offset = ((label) - $)
+    u1 ($C9)
+    s4 (offset)
 end macro
 
 macro l2d?
@@ -510,6 +529,7 @@ macro lneg?
     u1 ($75)
 end macro
 
+; Maybe change the decl in another file ...
 macro align? upto?*, fill?:$00
     if ((bsf upto) <> (bsr upto))
         err "invalid operand"
@@ -691,8 +711,33 @@ macro swap?
     u1 ($5F)
 end macro
 
-macro tableswitch?
-    err "Not yet implemented"
+macro tableswitch? low?*, high?
+    local label_list, count_label
+    count_label = $00
+    macro ? line&
+        local offset
+        match =default? =: label, line
+            purge ?
+            match _, high
+                if (_ < low) | ((_ - low + $01) <> count_label)
+                    err "invalid operand"
+                end if
+            end match
+            offset = ((label) - $)
+            u1 ($AA)
+            align $04
+            s4 (offset)
+            s4 (low)
+            s4 (count_label)
+            irpv value, label_list
+                indx (%% - % + $01)
+                s4 (value)
+            end irpv
+        else match label, line
+            label_list =: ((label) - $)
+            count_label = count_label + $01
+        end match
+    end macro
 end macro
 
 macro wide? line?&
