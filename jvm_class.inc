@@ -22,10 +22,14 @@ ACC_ANNOTATION?     := $00002000
 ACC_ENUM?           := $00004000
 
 macro constant_pool?
+    local constant_pool_counter, constant_pool_count
+    __constant_pool_counter equ constant_pool_counter
+    __constant_pool_count   equ constant_pool_count
+
     constant_pool_counter = $01
     u2 (constant_pool_count)
 
-    struc constant_utf8? string?&*
+    struc constant_utf8? string?*&
         . = constant_pool_counter
         constant_pool_counter = constant_pool_counter + $01
         local data, length
@@ -111,36 +115,82 @@ macro constant_pool?
 end macro
 
 macro end?.constant_pool?
-    constant_pool_count := (constant_pool_counter - $01)
-    restruc constant_utf8?, constant_integer?, constant_float?, constant_long? 
-    restruc constant_double?, constant_class?, constant_string?, constant_fieldref? 
-    restruc constant_methodref?, constant_interfacemethodref?, constant_nameandtype? 
+    match count counter, __constant_pool_count __constant_pool_counter
+        count := ((counter) - $01)
+    end match
+    restore __constant_pool_counter, __constant_pool_count
+    restruc constant_utf8?,                 \
+            constant_integer?,              \
+            constant_float?,                \
+            constant_long?,                 \
+            constant_double?,               \
+            constant_class?,                \
+            constant_string?,               \
+            constant_fieldref?,             \ 
+            constant_methodref?,            \
+            constant_interfacemethodref?,   \
+            constant_nameandtype? 
 end macro
 
 macro interfaces?
-    u2 (interfaces_count)
+    local interfaces_counter, interfaces_count
+    __interfaces_counter equ interfaces_counter
+    __interfaces_count   equ interfaces_count
+ 
     interfaces_counter = $00
-    macro interface? name?*&
-        iterate index, name
-            interfaces_counter = interfaces_counter + $01
-            u2 (index)
-        end iterate
+    u2 (interfaces_count)
+
+    macro interface? index?*
+        interfaces_counter = interfaces_counter + $01
+        u2 (index)
     end macro
 end macro
 
 macro end?.interfaces?
-    interfaces_count = interfaces_counter
+    match count counter, __interfaces_count __interfaces_counter
+        count := (counter)
+    end match
+    restore __interfaces_counter, __interfaces_count
     purge interface?
 end macro
 
 macro attributes?
+    local attributes_counter, attributes_count
+    __attributes_counter equ attributes_counter
+    __attributes_count   equ attributes_count
+    
+    attributes_counter = $00
+    u2 (attributes_count)
+
+    macro attribute? name_index?*
+        local begin, length
+        __attribute_begin  equ begin
+        __attribute_length equ length
+        
+        attributes_counter = attributes_counter + $01
+        
+        u2 (name_index)
+        u4 (length)
+        begin := $
+    end macro
+       
+    macro end?.attribute?
+        match beg len, __attribute_begin __attribute_length
+            len := ($ - (beg))
+        end match
+        restore __attribute_begin, __attribute_length
+    end macro
 end macro
 
 macro end?.attributes?
+    match count counter,  __attributes_count __attributes_counter
+        count := (counter)
+    end match
+    restore __attributes_counter, __attributes_count
+    purge attribute?, end?.attribute?
 end macro
 
 macro fields?
-
 end macro
 
 macro end?.fields?
