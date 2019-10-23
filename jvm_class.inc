@@ -116,7 +116,7 @@ end macro
 
 macro end?.constant_pool?
     match count counter, __constant_pool_count __constant_pool_counter
-        count := ((counter) - $01)
+        count := (counter)
     end match
     restore __constant_pool_counter, __constant_pool_count
     restruc constant_utf8?,                 \
@@ -229,32 +229,50 @@ macro methods?
         u2 (name_index)
         u2 (descriptor_index)
 
-        attributes
-        macro bytecode? code_index?*, stack?:$01, locals?:$01
+        macro bytecode? stack?:$01, locals?:$01
             local begin, length
             __bytecode_begin  equ begin
             __bytecode_length equ length
-            attribute code_index
             u2 (stack)
             u2 (locals)
-            u2 (length)
+            u4 (length)
             begin := $
             org $00
-            ;macro exceptions?
-            ;end macro
         end macro
         macro end?.bytecode?
             match beg len, __bytecode_begin __bytecode_length
-                len := $
+                len := ($)
                 org (beg + len)
             end match
-            end attribute
             restore __bytecode_begin, __bytecode_length
         end macro
+        macro exceptions?
+            local exceptions_counter, exceptions_count
+            __exceptions_counter equ exceptions_counter
+            __exceptions_count   equ exceptions_count
+                
+            exceptions_counter = $00
+            u2 (exceptions_count)
+
+            macro exception? start_pc?*, end_pc?*, handler_pc?*, catch_type?*
+                u2 (start_pc)
+                u2 (end_pc)
+                u2 (handler_pc)
+                u2 (handler_pc)
+            end macro
+        end macro
+        macro end?.exceptions?
+            match count counter, __exceptions_count __exceptions_counter
+                count := (counter)
+            end match
+            purge exception?
+        end macro
+        attributes
     end macro
     macro end?.method?
         end attributes
-        purge bytecode?, end?.bytecode?
+        purge   bytecode?,   end?.bytecode?,\
+              exceptions?, end?.exceptions?
     end macro
 end macro
 
@@ -265,10 +283,3 @@ macro end?.methods?
     purge method?, end?.method?
 end macro
 
-;methods
-;    method ACC_PUBLIC, $00, $01
-;        bytecode $00
-;           aload_1
-;        end bytecode
-;    end method
-;end methods

@@ -97,9 +97,11 @@ macro __unbroken_decl? name?*, rep?*, base?*, start?:$00, step?:$01
     local current_base
     current_base = base
     repeat (rep), i:start
-        macro name#_#i?
-            u1 (current_base)
-        end macro
+        repeat $01, j:current_base
+            macro name#_#i?
+                u1 (j)
+            end macro
+        end repeat
         current_base = current_base + step
     end repeat
 end macro
