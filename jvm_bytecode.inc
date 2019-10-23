@@ -42,7 +42,7 @@ macro aconst_null?
 end macro
 
 __wide := $C4
-iterate <instr,value>,  aload,$32,  dload,$18,  iload,$15,\
+iterate <instr,value>,  aload,$19,  dload,$18,  iload,$15,\
                         fload,$17,  lload,$16, astore,$3A,\
                        dstore,$39, istore,$36, fstore,$38,\
                        lstore,$37,    ret,$A9,   iinc,$84
@@ -106,22 +106,22 @@ macro __unbroken_decl? name?*, rep?*, base?*, start?:$00, step?:$01
     end repeat
 end macro
 
-__unbroken_decl aload,      $04, $42
+__unbroken_decl aload,      $04, $2A
 __unbroken_decl astore,     $04, $4B
 __unbroken_decl dconst,     $02, $0E
 __unbroken_decl dload,      $04, $26
 __unbroken_decl dstore,     $04, $47
-__unbroken_decl dup_x,      $02, $5B
+__unbroken_decl dup_x,      $02, $5A
 __unbroken_decl dup2_x,     $02, $5D
 __unbroken_decl fconst,     $03, $0B
 __unbroken_decl fload,      $04, $22
 __unbroken_decl fstore,     $04, $43
 __unbroken_decl iconst,     $06, $03
-__unbroken_decl iload,      $04, $26
+__unbroken_decl iload,      $04, $1A
 __unbroken_decl impdep,     $02, $FE
 __unbroken_decl istore,     $04, $3B
 __unbroken_decl lconst,     $02, $09
-__unbroken_decl lload,      $04, $20
+__unbroken_decl lload,      $04, $1E
 __unbroken_decl lstore,     $04, $3F
 
 purge __unbroken_decl?
@@ -365,7 +365,7 @@ macro idiv?
     u1 ($6C)
 end macro
 
-iterate <cond,opcd>, eq,$0A, ne,$A6
+iterate <cond,opcd>, eq,$A5, ne,$A6
     macro if_acmp#cond? label?
         local offset
         offset = ((label) - $)
@@ -410,6 +410,13 @@ end macro
 macro instanceof? type?*
     u1 ($C1)
     u2 (type)
+end macro
+
+macro invokedynamic? index?*
+    u1 ($B1)
+    u2 (index)
+    u1 ($00)
+    u1 ($00)
 end macro
 
 macro invokeinterface? index?*, n?*
