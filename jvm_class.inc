@@ -136,7 +136,7 @@ macro interfaces?
     local interfaces_counter, interfaces_count
     __interfaces_counter equ interfaces_counter
     __interfaces_count   equ interfaces_count
- 
+
     interfaces_counter = $00
     u2 (interfaces_count)
 
@@ -166,9 +166,7 @@ macro attributes?
         local begin, length
         __attribute_begin  equ begin
         __attribute_length equ length
-        
         attributes_counter = attributes_counter + $01
-        
         u2 (name_index)
         u4 (length)
         begin := $
@@ -191,13 +189,86 @@ macro end?.attributes?
 end macro
 
 macro fields?
+    local fields_counter, fields_count
+    __fields_counter equ fields_counter
+    __fields_count   equ fields_count
+    
+    fields_counter = $00
+    u2 (fields_count)
+    
+    macro field? access_flag?*, name_index?*, descriptor_index?*
+        __fields_counter = __fields_counter + $01
+        u2 (access_flag)
+        u2 (name_index)
+        u2 (descriptor_index)
+        attributes
+    end macro
+    macro end?.field?
+        end attributes
+    end macro
 end macro
 
 macro end?.fields?
+    match count counter, __fields_count __fields_counter
+        count := (counter)
+    end match
+    purge field?, end?.field?
 end macro
 
 macro methods?
+    local methods_counter, methods_count
+    __methods_counter equ methods_counter
+    __methods_count   equ methods_count
+    
+    methods_counter = $00
+    u2 (methods_count)
+    
+    macro method? access_flag?*, name_index?*, descriptor_index?*
+        methods_counter = methods_counter + $01
+        u2 (access_flag)
+        u2 (name_index)
+        u2 (descriptor_index)
+
+        attributes
+        macro bytecode? code_index?*, stack?:$01, locals?:$01
+            local begin, length
+            __bytecode_begin  equ begin
+            __bytecode_length equ length
+            attribute code_index
+            u2 (stack)
+            u2 (locals)
+            u2 (length)
+            begin := $
+            org $00
+            ;macro exceptions?
+            ;end macro
+        end macro
+        macro end?.bytecode?
+            match beg len, __bytecode_begin __bytecode_length
+                len := $
+                org (beg + len)
+            end match
+            end attribute
+            restore __bytecode_begin, __bytecode_length
+        end macro
+    end macro
+    macro end?.method?
+        end attributes
+        purge bytecode?, end?.bytecode?
+    end macro
 end macro
 
 macro end?.methods?
+    match count counter, __methods_count __methods_counter
+        count := (counter)
+    end match
+    purge method?, end?.method?
 end macro
+
+;methods
+;    method ACC_PUBLIC, $00, $01
+;        bytecode $00
+;           aload_1
+;        end bytecode
+;    end method
+;end methods
