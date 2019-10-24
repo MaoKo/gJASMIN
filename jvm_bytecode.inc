@@ -49,7 +49,7 @@ iterate <instr,value>,  aload,$19,  dload,$18,  iload,$15,\
     __#instr? := value
 end iterate
 
-macro __extend_parameter? line?*&
+macro __extend_params? line?*&
     local token, remain, param, sign, prev
     remain equ line
     prev = not (__wide)
@@ -74,7 +74,7 @@ macro __extend_parameter? line?*&
                 sign = $00
             else match =SIGNED?, _
             else
-                err "Bad option sign"
+                err "invalid operand"
             end match
         end match
         if (prev = __wide)
@@ -89,7 +89,7 @@ iterate instr,  aload,  dload,  iload,  fload, lload, astore,\
                dstore, istore, fstore, lstore,   ret
     macro instr? varnum?*
         u1 (__#instr)
-        __extend_parameter varnum:UNSIGNED
+        __extend_params varnum:UNSIGNED
     end macro
 end iterate
 
@@ -396,7 +396,7 @@ end iterate
 
 macro iinc? varnum?*, num?*
     u1 ($84)
-    __extend_parameter varnum:UNSIGNED, num
+    __extend_params varnum:UNSIGNED, num
 end macro
 
 macro imul?
@@ -739,7 +739,7 @@ macro tableswitch? low?*, high?
             s4 (low)
             s4 (count_label)
             irpv value, label_list
-                indx (%% - % + $01)
+                indx ((%% - %) + $01)
                 s4 (value)
             end irpv
         else match label, line
@@ -762,7 +762,7 @@ macro wide? line?&
         end if
     end iterate
     if (~(found))
-        err "Bad opcode after wide instruction"
+        err "wide instruction ill-formed"
     end if
     area_wide::
     line
